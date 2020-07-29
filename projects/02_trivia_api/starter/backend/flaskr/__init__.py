@@ -42,10 +42,14 @@ def create_app(test_config=None):
   '''
   @app.route('/categories', methods=['GET'])
   def get_catgories():
-    categories =  [category.format() for category in Category.query.all()] 
+    categories =  Category.query.all()
+    formatted_category = {}
+    for cat in categories:
+      formatted_category[cat.id] = cat.type
+    # [category.format() for category in Category.query.all()] 
     return jsonify({
       'success': True,
-      'categories': categories,
+      'categories': formatted_category,
       'total_categories': len(categories)
     })
   '''
@@ -68,14 +72,17 @@ def create_app(test_config=None):
     if len(current_questions) == 0:
       abort(404)
     
-    categories = [category.format() for category in Category.query.all()]
+    categories =  Category.query.all()
+    formatted_category = {}
+    for cat in categories:
+      formatted_category[cat.id] = cat.type
 
     return jsonify({
       'success':True,
       'questions': current_questions,
       'total_questions': len(Question.query.all()),
       'current_category': None,
-      'categories':categories
+      'categories':formatted_category
     })
   '''
   @TODO: 
@@ -199,14 +206,15 @@ def create_app(test_config=None):
     body = request.get_json()
     category = body.quiz_category
     pre_questions = body.previous_questions
-
     all_questions = Question.query.filter(Question.category == category.id).all()
-    questions = []
-    for q in all_questions:
-      if q not in pre_questions:
-        questions.append(q)
-
-    next_question = random.choice(questions)
+    if len(pre_questions) != 0:
+      questions = []
+      for q in all_questions:
+        if q not in pre_questions:
+          questions.append(q)
+      next_question = random.choice(questions)
+    else:
+      next_question = random.choice(all_questions)
 
     return jsonify({
       'success': True,
