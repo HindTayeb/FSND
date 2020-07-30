@@ -202,23 +202,24 @@ def create_app(test_config=None):
   and shown whether they were correct or not. 
   '''
   @app.route('/quizzes', methods=['POST'])
-  def get_quiz():
+  def get_quiz():   
     body = request.get_json()
-    category = body.quiz_category
-    pre_questions = body.previous_questions
-    all_questions = Question.query.filter(Question.category == category.id).all()
-    if len(pre_questions) != 0:
-      questions = []
-      for q in all_questions:
-        if q not in pre_questions:
-          questions.append(q)
-      next_question = random.choice(questions)
-    else:
+    end = False
+    next_question = None
+    pre_questions = body.get('previous_questions', None)
+    category = body.get('quiz_category', None)
+    selection = Question.query.filter(Question.category == category.get('id',None)).all()
+    all_questions = [question.format() for question in selection if question.id not in pre_questions]
+    if len(all_questions) != 0:
       next_question = random.choice(all_questions)
+      end = False
+    else:
+      end = True
 
     return jsonify({
       'success': True,
-      'question': next_question
+      'question': next_question,
+      'forceEnd': end
     })
   '''
   @TODO: 
