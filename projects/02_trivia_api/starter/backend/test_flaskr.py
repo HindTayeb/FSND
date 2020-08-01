@@ -19,9 +19,9 @@ class TriviaTestCase(unittest.TestCase):
         setup_db(self.app, self.database_path)
 
         self.new_question = {
-            'question': 'The Taj Mahal is located in which Indian city?',
-            'answer': 'Agra',
-            'difficulty': 2,
+            'question': 'Which African country was formerly known as Abyssinia?',
+            'answer': 'Ethiopia',
+            'difficulty': 3,
             'category': 3
         }
 
@@ -31,54 +31,48 @@ class TriviaTestCase(unittest.TestCase):
             self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
-    
+
     def tearDown(self):
         """Executed after reach test"""
         pass
 
-    """
-    TODO
-    Write at least one test for each test for successful operation and for expected errors.
-    """
+    def test_get_questions(self):
+        res = self.client().get('/questions')
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['questions'])
+        self.assertTrue(len(data['categories']))
 
-    # def test_get_questions(self):
-    #     res = self.client().get('/questions')
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data['success'], True)
-    #     self.assertTrue(data['questions'])
-    #     self.assertTrue(len(data['categories']))
+    def test_404_sent_requesting_beyond_valid_page(self):
+        res = self.client().get('/questions?page=1000', json={'rating': 1})
+        data = json.loads(res.data)
 
-    # def test_404_sent_requesting_beyond_valid_page(self):
-    #     res = self.client().get('/questions?page=1000', json={'rating':1})
-    #     data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'Resource Not Found')
 
-    #     self.assertEqual(res.status_code, 404)
-    #     self.assertEqual(data['success'], False)
-    #     self.assertEqual(data['message'], 'Resource Not found')
+    def test_delete_question(self):
+        res = self.client().delete('/questions/18')
+        data = json.loads(res.data)
 
+        question = Question.query.filter(Question.id == 18).one_or_none()
 
-    # def test_delete_question(self):
-    #     res = self.client().delete('/questions/15')
-    #     data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(data['deleted'], 18)
+        self.assertTrue(data['total_questions'])
+        self.assertTrue(len(data['questions']))
+        self.assertEqual(question, None)
 
-    #     question = Question.query.filter(Question.id == 15).one_or_none()
+    def test_create_new_question(self):
+        res = self.client().post('/questions', json=self.new_question)
+        data = json.loads(res.data)
 
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data['success'], True)
-    #     self.assertEqual(data['deleted'], 15)
-    #     self.assertTrue(data['total_questions'])
-    #     self.assertTrue(len(data['questions']))
-    #     self.assertEqual(question,None)
-
-    # def test_create_new_question(self):
-    #     res = self.client().post('/questions', json=self.new_question)
-    #     data = json.loads(res.data)
-
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data['success'], True)
-    #     self.assertTrue(data['created'])
-    #     self.assertTrue(len(data['questions']))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['created'])
+        self.assertTrue(len(data['questions']))
 
     def test_405_if_question_creation_not_allowed(self):
         res = self.client().post('/questions/45', json=self.new_question)
@@ -88,23 +82,22 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], False)
         self.assertTrue(data['message'], 'Method Not Allowed')
 
-    # def test_get_book_search_wih_results(self):
-    #     res = self.client().post('/questions', json={'search':'royal palace'})
-    #     data = json.loads(res.data)
+    def test_get_question_search_wih_results(self):
+        res = self.client().post('/questions', json={'searchTerm': 'anne'})
+        data = json.loads(res.data)
 
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data['success'], True)
-    #     self.assertTrue(data['total_questions'])
-    #     self.assertEqual(len(data['questions']), 3)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['total_questions'])
 
-    # def test_get_book_search_wihout_results(self):
-    #     res = self.client().post('/questions', json={'search':'applejacks'})
-    #     data = json.loads(res.data)
+    def test_get_question_search_wihout_results(self):
+        res = self.client().post('/questions', json={'searchTerm': 'applejacks'})
+        data = json.loads(res.data)
 
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data['success'], True)
-    #     self.assertEqual(data['total_questions'], 0)
-    #     self.assertEqual(len(data['questions']), 0)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        # self.assertEqual(data['total_questions'], 0)
+        self.assertEqual(len(data['questions']), 0)
 
 
 # Make the tests conveniently executable
