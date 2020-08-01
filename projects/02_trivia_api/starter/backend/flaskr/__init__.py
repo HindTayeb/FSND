@@ -68,7 +68,8 @@ def create_app(test_config=None):
     @app.route('/questions/<int:question_id>', methods=['DELETE'])
     def delete_question(question_id):
         try:
-            question = Question.query.filter(Question.id == question_id).one_or_none()
+            question = Question.query.filter(
+                Question.id == question_id).one_or_none()
             if question is None:
                 abort(404)
 
@@ -96,7 +97,9 @@ def create_app(test_config=None):
 
         try:
             if search:
-                selection = Question.query.order_by(Question.id).filter(Question.question.ilike('%{}%'.format(search)))
+                selection = Question.query.order_by(
+                    Question.id).filter(
+                        Question.question.ilike('%{}%'.format(search)))
                 current_questions = paginate_questions(request, selection)
 
                 return jsonify({
@@ -123,7 +126,8 @@ def create_app(test_config=None):
 
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
     def get_questions_by_category(category_id):
-        selection = Question.query.filter(Question.category == category_id).all()
+        selection = Question.query.filter(
+            Question.category == category_id).all()
         if len(selection) == 0:
             abort(404)
 
@@ -143,7 +147,8 @@ def create_app(test_config=None):
         category = body.get('quiz_category', None)
         if category.get('id', None) != 0:
             print('is not qual true')
-            selection = Question.query.filter(Question.category == category.get('id', None)).all()
+            selection = Question.query.filter(
+                Question.category == category.get('id', None)).all()
         else:
             print('is qual true')
             selection = Question.query.all()
